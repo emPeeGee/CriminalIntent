@@ -3,12 +3,9 @@ package com.example.criminalintent
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
@@ -16,7 +13,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.text.SimpleDateFormat
 import java.util.*
-import javax.security.auth.callback.Callback
 
 private const val TAG = "CrimeListFragment"
 
@@ -29,6 +25,8 @@ class CrimeListFragment : Fragment() {
     private var callbacks: Callbacks? = null
 
     private lateinit var crimeRecyclerView: RecyclerView
+    private lateinit var noCrimeTextView: TextView
+
     private var adapter: CrimeAdapter? = CrimeAdapter(emptyList())
     private var formater: SimpleDateFormat = SimpleDateFormat("dd.MM.yyyy 'at' HH:mm")
 
@@ -42,6 +40,11 @@ class CrimeListFragment : Fragment() {
         callbacks = context as Callbacks?
     }
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -49,6 +52,9 @@ class CrimeListFragment : Fragment() {
     ): View? {
 
         val view = inflater.inflate(R.layout.fragment_crime_list, container, false)
+
+        noCrimeTextView = view.findViewById(R.id.no_crimes)
+
         crimeRecyclerView = view.findViewById(R.id.crime_recycler_view) as RecyclerView
         crimeRecyclerView.layoutManager = LinearLayoutManager(context)
         crimeRecyclerView.adapter = adapter
@@ -76,7 +82,34 @@ class CrimeListFragment : Fragment() {
         callbacks = null
     }
 
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        super.onCreateOptionsMenu(menu, inflater)
+        inflater.inflate(R.menu.fragment_crime_list, menu)
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when(item.itemId) {
+            R.id.new_crime -> {
+                val crime = Crime()
+                crimeListViewModel.addCrime(crime)
+                callbacks?.onCrimeSelected(crimeId = crime.id)
+                true
+            }
+
+            else -> return super.onOptionsItemSelected(item)
+        }
+    }
+
+
     private fun updateUI(crimes: List<Crime>) {
+
+        if (crimes.isNotEmpty()) {
+            noCrimeTextView.visibility = View.GONE
+        } else {
+            noCrimeTextView.visibility = View.VISIBLE
+
+        }
+
         adapter = CrimeAdapter(crimes)
         crimeRecyclerView.adapter = adapter
     }
@@ -115,6 +148,7 @@ class CrimeListFragment : Fragment() {
 
     private inner class CrimeAdapter(var crimes: List<Crime>) : RecyclerView.Adapter<CrimeHolder>() {
 
+
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CrimeHolder {
             val view = layoutInflater.inflate(R.layout.list_item_crime, parent, false)
 
@@ -124,7 +158,7 @@ class CrimeListFragment : Fragment() {
         override fun getItemCount() = crimes.size
 
         override fun onBindViewHolder(holder: CrimeHolder, position: Int) {
-            val crime = crimes.get(position)
+            val crime = crimes[position]
             holder.bind(crime)
         }
 
