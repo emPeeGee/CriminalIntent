@@ -10,6 +10,7 @@ import android.provider.ContactsContract
 import android.text.Editable
 import android.text.TextWatcher
 import android.text.format.DateFormat
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,6 +31,7 @@ private const val DIALOG_TIME = "DialogTime"
 private const val REQUEST_DATE = 0
 private const val REQUEST_TIME = 1
 private const val REQUEST_CONTACT = 2
+private const val REQUEST_NUMBER = 3
 
 private const val DATE_FORMAT = "EEE, MMM, dd"
 
@@ -41,6 +43,7 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks, TimePickerFragme
     private lateinit var solvedCheckBox: CheckBox
     private lateinit var reportButton: Button
     private lateinit var suspectButton: Button
+    private lateinit var callButton: Button
 
     private val dateFormatter = SimpleDateFormat("dd.MM.yyyy")
     private val timeFormatter = SimpleDateFormat("HH:mm")
@@ -73,6 +76,7 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks, TimePickerFragme
         timeButton = view.findViewById(R.id.crime_time) as Button
         reportButton = view.findViewById(R.id.crime_report) as Button
         suspectButton = view.findViewById(R.id.crime_suspect) as Button
+        callButton = view.findViewById(R.id.crime_call) as Button
         solvedCheckBox = view.findViewById(R.id.crime_solved) as CheckBox
 
 
@@ -155,6 +159,14 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks, TimePickerFragme
                 isEnabled = false
             }
         }
+
+        callButton.apply {
+            val pickContactNumberIntent = Intent(Intent.ACTION_PICK, ContactsContract.CommonDataKinds.Phone.CONTENT_URI)
+
+            setOnClickListener {
+                startActivityForResult(pickContactNumberIntent, REQUEST_NUMBER)
+            }
+        }
     }
 
     override fun onStop() {
@@ -182,6 +194,30 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks, TimePickerFragme
                     crime.suspect = suspect
                     crimeDetailViewModel.saveCrime(crime)
                     suspectButton.text = suspect
+                }
+
+            }
+
+            requestCode == REQUEST_NUMBER && data != null -> {
+                val numberUri : Uri? = data.data
+                val queryField = arrayOf(ContactsContract.CommonDataKinds.Phone.NUMBER)
+
+                val cursor = requireActivity().contentResolver.query(numberUri!!, queryField, null, null, null)
+
+                cursor?.use {
+                    if (it.count == 0) {
+                        return
+                    }
+
+                    it.moveToFirst()
+
+                    val number = it.getString(0)
+
+                    val uriNumber = Uri.parse("tel:" + number)
+
+                    Intent(Intent.ACTION_DIAL, uriNumber).also {
+                        startActivity(it)
+                    }
                 }
 
             }
