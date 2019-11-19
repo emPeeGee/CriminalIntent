@@ -28,6 +28,7 @@ import java.util.*
 private const val ARG_CRIME_ID = "crimeId"
 private const val DIALOG_DATE = "DialogDate"
 private const val DIALOG_TIME = "DialogTime"
+private const val DIALOG_ZOOM = "DialogZoom"
 
 private const val REQUEST_DATE = 0
 private const val REQUEST_TIME = 1
@@ -203,7 +204,12 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks, TimePickerFragme
 
                 startActivityForResult(captureImage, REQUEST_PHOTO)
             }
+        }
 
+        photoView.setOnClickListener {
+            ZoomedPhotoFragment.newInstance(photoFile.path).apply {
+                show(this@CrimeFragment.requireFragmentManager(), DIALOG_ZOOM)
+            }
         }
     }
 
