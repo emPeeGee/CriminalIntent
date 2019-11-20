@@ -206,9 +206,12 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks, TimePickerFragme
             }
         }
 
-        photoView.setOnClickListener {
-            ZoomedPhotoFragment.newInstance(photoFile.path).apply {
-                show(this@CrimeFragment.requireFragmentManager(), DIALOG_ZOOM)
+        photoView.apply {
+            isEnabled = false
+            setOnClickListener {
+                ZoomedPhotoFragment.newInstance(photoFile.path).apply {
+                    show(this@CrimeFragment.requireFragmentManager(), DIALOG_ZOOM)
+                }
             }
         }
     }
@@ -310,7 +313,10 @@ class CrimeFragment : Fragment(), DatePickerFragment.Callbacks, TimePickerFragme
         if (photoFile.exists()) {
             val bitmap = getScaledBitmap(photoFile.path, requireActivity())
             photoView.setImageBitmap(bitmap)
+            photoView.isEnabled = true
+
         } else {
+            photoView.isEnabled = false
             photoView.setImageBitmap(null)
         }
     }
